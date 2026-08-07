@@ -1,0 +1,755 @@
+#Include 'protheus.ch'
+#Include 'rwmake.ch'
+///////////////////////////////////////////////////////////////////////////////
+User Function TD_RMCOM()
+///////////////////////////////////////////////////////////////////////////////
+// Data : 13/07/2011
+// User : Thieres Tembra
+// Ação : Relatório macro de compras.
+//        Envolve as tabelas SA2, SF1, SD1, SE2, SC7, SC1
+//        O relatório é gerado no formato CSV separado por ponto e vírgula.
+///////////////////////////////////////////////////////////////////////////////
+/*
+    Período.......................: Período a ser emitido o relatório
+    ..............................:   F1_DTDIGIT
+    Fornecedor....................: Código, Loja, Razão Social
+    ..............................:   F1_DOC, F1_SERIE (GROUP BY) F1_FORNECE, F1_LOJA
+    Produto.......................: Código, Descrição
+    ..............................:   D1_COD
+    Tipo..........................: (Opções) Analítico / Sintético
+    ..............................:   Analítico
+    ..............................:     > Exibe cada produto das notas
+    ..............................:   Sintético
+    ..............................:     > Exibe somente o cabeçalho das notas
+    Volume Total Compra (R$)......: Valor total das notas do período informado
+    ..............................:   D1_TOTAL + D1_VALFRE + D1_DESPESA + D1_SEGURO - D1_VALDESC
+    Média Mensal Compra (R$)......: (Opções) Mês atual / Período informado no relatório
+    ..............................:   Mês atual
+    ..............................:     > Volume Total Compra (R$) do mês atual
+    ..............................:   Período informado no relatório
+    ..............................:     > Volume Total Compra (R$) dividido pela diferença de meses (Mês Final - Mês Inicial)
+    Média Semestral Compra (R$)...: (Opções) 1º Semestre / 2º Semestre / Primeiros 6 meses / Últimos 6 meses
+    ..............................:   1º Semestre
+    ..............................:     > Janeiro a Junho
+    ..............................:   2º Semestre
+    ..............................:     > Julho a Dezembro
+    ..............................:   Primeiros 6 meses
+    ..............................:     > Primeiros 6 meses do período informado no relatório
+    ..............................:   Últimos 6 meses
+    ..............................:     > Últimos 6 meses do período informado no relatório
+    Periodicidade.................: Média do intervalo de dias das datas de entrada das notas do período informado
+    ..............................:   F1_DTDIGIT
+    Média de Prazo para Pagamento.: Média do intervalo de dias das datas de emissão das duplicatas das notas do período informado
+    ..............................:   Média de:
+    ..............................:     > 1ª Duplicata: E2_EMISSAO - F1_EMISSAO
+    ..............................:     > 2ª Duplicata: E2_EMISSAO - E2_EMISSAO (1ª)
+    ..............................:     > Nª Duplicata: E2_EMISSAO - E2_EMISSAO (N-1)
+    5 Últimos Requisitantes.......: 5 últimos usuários com o número das solicitações, pedidos e notas, se houverem
+    ..............................:   D1_DOC, D1_PEDIDO > C7_NUM, C7_NUMSC > C1_NUM, C1_SOLICIT
+*/
+	Local cPerg := 'RMCOM'
+	Local nTamGrp := Len(SX1->X1_GRUPO)
+	Local aHelpPor := {}, aHelpEng := {}, aHelpSpa := {}
+	Local cNome
+	Private _cTitle := 'Relatório Macro de Compras por Fornecedor'
+	
+	aHelpPor := {}
+	aAdd(aHelpPor, 'Período a ser emitido o relatório.      ')
+	cNome := 'Data de'
+	PutSx1(PadR(cPerg,nTamGrp), '01', cNome, cNome, cNome,;
+			'MV_CH1', 'D', 8, 0, 0, 'G', '', '', '', '', 'MV_PAR01',;
+			'', '', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	cNome := 'Data ate'
+	PutSx1(PadR(cPerg,nTamGrp), '02', cNome, cNome, cNome,;
+			'MV_CH2', 'D', 8, 0, 0, 'G', '', '', '', '', 'MV_PAR02',;
+			'', '', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	aHelpPor := {}
+	aAdd(aHelpPor, 'Fornecedores a serem listados.          ')
+	cNome := 'Do Fornecedor'
+	PutSx1(PadR(cPerg,nTamGrp), '03', cNome, cNome, cNome,;
+			'MV_CH3', 'C', 6, 0, 0, 'G', '', 'SA2', '', '', 'MV_PAR03',;
+			'', '', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	cNome := 'Ate Fornecedor'
+	PutSx1(PadR(cPerg,nTamGrp), '04', cNome, cNome, cNome,;
+			'MV_CH4', 'C', 6, 0, 0, 'G', '', 'SA2', '', '', 'MV_PAR04',;
+			'', '', '', 'ZZZZZZ',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	aHelpPor := {}
+	aAdd(aHelpPor, 'Produtos a serem listados.              ')
+	cNome := 'Do Produto'
+	PutSx1(PadR(cPerg,nTamGrp), '05', cNome, cNome, cNome,;
+			'MV_CH5', 'C', 15, 0, 0, 'G', '', 'SB1', '', '', 'MV_PAR05',;
+			'', '', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	cNome := 'Ate Produto'
+	PutSx1(PadR(cPerg,nTamGrp), '06', cNome, cNome, cNome,;
+			'MV_CH6', 'C', 15, 0, 0, 'G', '', 'SB1', '', '', 'MV_PAR06',;
+			'', '', '', 'ZZZZZZZZZZZZZZZ',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+			
+	aHelpPor := {}
+	aAdd(aHelpPor, 'Analítico                               ')
+	aAdd(aHelpPor, '  > Exibe cada produto das notas        ')
+	aAdd(aHelpPor, 'Sintético                               ')
+	aAdd(aHelpPor, '  > Exibe somente o cabeçalho das notas ')
+	aAdd(aHelpPor, '                                        ')
+	aAdd(aHelpPor, 'Caso seja aplicado filtro nos produtos o')
+	aAdd(aHelpPor, 'relatório será do tipo analítico.       ')
+	cNome := 'Tipo'
+	PutSx1(PadR(cPerg,nTamGrp), '07', cNome, cNome, cNome,;
+	        'MV_CH7', 'C', 1, 0, 0, 'C', '', '', '', '', 'MV_PAR07',;
+	        'Analítico', 'Analítico', 'Analítico', '1',;
+	        'Sintético', 'Sintético', 'Sintético',;
+	        '', '', '',;
+	        '', '', '',;
+	        '', '', '',;
+	        aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	aHelpPor := {}
+	aAdd(aHelpPor, 'Mês atual                               ')
+	aAdd(aHelpPor, '  > Volume Total (R$) do mês atual      ')
+	aAdd(aHelpPor, 'Período                                 ')
+	aAdd(aHelpPor, '  > Volume Total (R$) dividido pela     ')
+	aAdd(aHelpPor, 'diferença de meses (Final - Inicial)    ')
+	cNome := 'Média Mensal'
+	PutSx1(PadR(cPerg,nTamGrp), '08', cNome, cNome, cNome,;
+	        'MV_CH8', 'C', 1, 0, 0, 'C', '', '', '', '', 'MV_PAR08',;
+	        'Mês atual', 'Mês atual', 'Mês atual', '1',;
+	        'Período', 'Período', 'Período',;
+	        '', '', '',;
+	        '', '', '',;
+	        '', '', '',;
+	        aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	aHelpPor := {}
+	aAdd(aHelpPor, '1º Semestre                             ')
+	aAdd(aHelpPor, '  > Janeiro a Junho                     ')
+	aAdd(aHelpPor, '2º Semestre                             ')
+	aAdd(aHelpPor, '  > Julho a Dezembro                    ')
+	aAdd(aHelpPor, 'Pri. 6 meses                            ')
+	aAdd(aHelpPor, '  > Primeiros 6 meses do período        ')
+	aAdd(aHelpPor, 'Ult. 6 meses                            ')
+	aAdd(aHelpPor, '  > Últimos 6 meses do período          ')
+	cNome := 'Média Semestral'
+	PutSx1(PadR(cPerg,nTamGrp), '09', cNome, cNome, cNome,;
+	        'MV_CH9', 'C', 1, 0, 0, 'C', '', '', '', '', 'MV_PAR09',;
+	        '1º Semestre', '1º Semestre', '1º Semestre', '1',;
+	        '2º Semestre', '2º Semestre', '2º Semestre',;
+	        'Pri. 6 meses', 'Pri. 6 meses', 'Pri. 6 meses',;
+	        'Ult. 6 meses', 'Ult. 6 meses', 'Ult. 6 meses',;
+	        '', '', '',;
+	        aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	aHelpPor := {}
+	aAdd(aHelpPor, 'Listar X últimos usuários com o número  ')
+	aAdd(aHelpPor, 'das solicitações, pedidos e documentos, ')
+	aAdd(aHelpPor, 'caso houverem.                          ')
+	cNome := 'Qtd Solicitantes'
+	PutSx1(PadR(cPerg,nTamGrp), '10', cNome, cNome, cNome,;
+	        'MV_CHA', 'C', 2, 0, 0, 'G', '', '', '', '', 'MV_PAR10',;
+	        '', '', '', '05',;
+	        '', '', '',;
+	        '', '', '',;
+	        '', '', '',;
+	        '', '', '',;
+	        aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	aHelpPor := {}
+	aAdd(aHelpPor, 'Caminho e nome do arquivo de saída.     ')
+	cNome := 'Arquivo'
+	PutSx1(PadR(cPerg,nTamGrp), '11', cNome, cNome, cNome,;
+			'MV_CHB', 'C', 50, 0, 0, 'G', '', '', '', '', 'MV_PAR11',;
+			'', '', '', 'C:\SPOOL\RMCOM.csv',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			'', '', '',;
+			aClone(aHelpPor), aClone(aHelpEng), aClone(aHelpSpa))
+	
+	/*
+		MV_PAR01 = DATA DE
+		MV_PAR02 = DATA ATE
+		MV_PAR03 = DO FORNECEDOR
+		MV_PAR04 = ATE FORNECEDOR
+		MV_PAR05 = DO PRODUTO
+		MV_PAR06 = ATE PRODUTO
+		MV_PAR07 = TIPO
+		MV_PAR08 = MEDIA MENSAL
+		MV_PAR09 = MEDIA SEMESTRAL
+		MV_PAR10 = LISTAR SOLICITANTES
+		MV_PAR11 = ARQUIVO
+	*/
+	If !Pergunte(cPerg, .T., _cTitle)
+		Return Nil
+	End If
+	
+	If MV_PAR01 == Nil .or. MV_PAR01 == CTOD('') .or. MV_PAR02 == Nil .or. MV_PAR02 == CTOD('')
+		Alert('Informe as datas para geração do relatório.')
+		Return Nil
+	ElseIf MV_PAR02 < MV_PAR01
+		Alert('A data final deve ser maior que a data inicial.')
+		Return Nil
+	ElseIf AllTrim(MV_PAR05) <> '' .or. MV_PAR06 <> 'ZZZZZZZZZZZZZZZ'
+		If MV_PAR07 <> 1
+			If Aviso('Atenção', 'Você escolheu relatório tipo sintético, mas está '+;
+			'filtrando os produtos.'+chr(13)+' Dessa forma o relatório será impresso '+;
+			'obrigatoriamente de forma analítica. Confirma?', {'Sim','Não'}) == 2
+				Alert('Operação cancelada.')
+				Return Nil
+			EndIf
+			MV_PAR07 := 1
+		EndIf
+	ElseIf Val(MV_PAR10) < 0
+		MV_PAR10 := '0'
+	Elseif AllTrim(MV_PAR11) == ''
+		MV_PAR11 := 'C:\SPOOL\RMCOM.csv'
+	EndIf
+	
+	Processa({|| TDRMCOM() }, _cTitle, 'Aguarde..', .F.)
+Return Nil
+
+Static Function TDRMCOM()
+	Local cQry, cCampo, cRet, cDocAtu, cDocAnt := '', cArq := AllTrim(MV_PAR11)
+	Local aInfo1  := {_cTitle}
+	Local aInfo2  := {'Período: ' + U_MyDataBR(DTOS(MV_PAR01)) + ' até ' + U_MyDataBR(DTOS(MV_PAR02))}
+	Local aInfo3  := {'Emitido em ' + U_MyDataBR(DTOS(Date())) + ' por ' + AllTrim(cUsername)}
+	Local aInfo4  := {'Parâmetros:'}
+	Local aInfo5  := {'    Data: '+U_MyDataBR(DTOS(MV_PAR01))+' até '+U_MyDataBR(DTOS(MV_PAR02))}
+	Local aInfo6  := {"    Fornecedor: '"+MV_PAR03+"' até '"+MV_PAR04+"'"}
+	Local aInfo7  := {"    Produto: '"+MV_PAR05+"' até '"+MV_PAR06+"'"}
+	Local aInfo8  := {'    Tipo: '+Iif(MV_PAR07==1,'Analítico','Sintético')}
+	Local aInfo9  := {'    Média Mensal: '+Iif(MV_PAR08==1,'Mês atual','Período')}
+	Local aInfo10 := {'    Média Semestral: '+Iif(MV_PAR09==1,'1º Semestre',Iif(MV_PAR09==2,'2º Semestre',Iif(MV_PAR09==3,'Pri. 6 meses','Ult. 6 Meses')))}
+	Local aInfo11 := {'    Qtd Solicitantes: '+MV_PAR10}
+	Local aTitulo := {'Fornecedor:'}
+	Local aCabecA := {'Documento','Emissão','Digitação','Produto','Descrição','Qtd','Valor','Frete','Despesa','Seguro','Desconto','Total'}
+	Local aCabecS := {'Documento','Emissão','Digitação','Valor','Frete','Despesa','Seguro','Desconto','Total','Qtd Dupl.','Prazo Médio'}
+	Local aTotalA := {'Qtd Dupl.','','Prazo Médio','','','','','','','','Total',''}
+
+	Local aDados  := {}
+	Local aDup    := {}
+	Local lCabec  := .F.
+	Local nHdl, nQtdDup, nTmpDup, nPos
+	Local nCount  := 0
+	Local nDocTot := 0
+	Local cTmp1, cTmp2, cTmp3
+	Local dDocAtu, dDup
+	
+	Private _aCabSC1 := {'Solicitação','Solicitante','Data','Pedido','Emissão','Documento','Digitação','Valor'}
+	Private _aRdp1   := {'Volume Total (R$)',''}
+	Private _aRdp2   := {'Média Mensal (R$)',''}
+	Private _aRdp3   := {'Média Semestral (R$)',''}
+	Private _aRdp4   := {'Periodicidade (dias)',''}
+	Private _aRdp5   := {'Média Prazo Pagamento (dias)',''}
+	Private _aExcel  := {}
+	Private _aBranco := {''}
+	Private _nVolTot, _nMedMes, _nMedSem, _nPeriod, _nPrazo
+	Private _nQtd, _nDifMes
+	Private _cTitulo := ''
+	
+	_nVolTot := _nMedMes := _nMedSem := _nPeriod := _nPrazo := _nQtd := 0
+	_nDifMes := U_MyDMes(MV_PAR01, MV_PAR02)
+	
+	nHdl := fCreate(cArq)
+	If nHdl == -1
+		Alert('Impossível escrever no arquivo: ' + cArq + chr(13) + chr(10) + 'Se o mesmo estiver aberto, por favor finalize.')
+		Return Nil
+	EndIf
+	fClose(nHdl)
+	
+	aAdd(_aExcel, aClone(aInfo1))
+	aAdd(_aExcel, aClone(aInfo2))
+	aAdd(_aExcel, aClone(aInfo3))
+	aAdd(_aExcel, aClone(_aBranco))
+	aAdd(_aExcel, aClone(aInfo4))
+	aAdd(_aExcel, aClone(aInfo5))
+	aAdd(_aExcel, aClone(aInfo6))
+	aAdd(_aExcel, aClone(aInfo7))
+	aAdd(_aExcel, aClone(aInfo8))
+	aAdd(_aExcel, aClone(aInfo9))
+	aAdd(_aExcel, aClone(aInfo10))
+	aAdd(_aExcel, aClone(aInfo11))
+	aAdd(_aExcel, aClone(_aBranco))
+	
+	If MV_PAR07 == 1
+		//analítico
+		cQry := " SELECT D1_FORNECE FORNECE,"
+		cQry += "        D1_LOJA LOJA,"
+		cQry += "        D1_DOC DOC,"
+		cQry += "        D1_SERIE SERIE,"
+		cQry += "        D1_COD PRODUTO,"
+		cQry += "        D1_QUANT QTD,"
+		cQry += "        D1_EMISSAO EMISSAO,"
+		cQry += "        D1_DTDIGIT DTDIGIT,"
+		cQry += "        D1_TOTAL VALOR,"
+		cQry += "        D1_VALFRE FRETE,"
+		cQry += "        D1_DESPESA DESPESA,"
+		cQry += "        D1_SEGURO SEGURO,"
+		cQry += "        D1_VALDESC DESCONTO,"
+		cQry += "        (D1_TOTAL + D1_VALFRE + D1_DESPESA + D1_SEGURO - D1_VALDESC) TOTAL"
+		cQry += " FROM "+RetSqlName('SD1')
+		cQry += " WHERE D1_DTDIGIT >= '"+DTOS(MV_PAR01)+"'"
+		cQry += "   AND D1_DTDIGIT <= '"+DTOS(MV_PAR02)+"'"
+		cQry += "   AND D1_FORNECE >= '"+AllTrim(MV_PAR03)+"'"
+		cQry += "   AND D1_FORNECE <= '"+AllTrim(MV_PAR04)+"'"
+		cQry += "   AND D1_COD     >= '"+AllTrim(MV_PAR05)+"'"
+		cQry += "   AND D1_COD     <= '"+AllTrim(MV_PAR06)+"'"
+		cQry += "   AND D1_FILIAL   = '"+xFilial('SD1')+"'"
+		cQry += "   AND D_E_L_E_T_ <> '*'"
+		cQry += " ORDER BY D1_FORNECE,"
+		cQry += "          D1_LOJA,"
+		cQry += "          D1_DTDIGIT,"
+		cQry += "          D1_DOC,"
+		cQry += "          D1_SERIE,"
+		cQry += "          D1_COD"
+	ElseIf MV_PAR07 == 2
+		//sintético
+		cQry := " SELECT F1_FORNECE FORNECE,"
+		cQry += "        F1_LOJA LOJA,"
+		cQry += "        F1_DOC DOC,"
+		cQry += "        F1_SERIE SERIE,"
+		cQry += "        F1_EMISSAO EMISSAO,"
+		cQry += "        F1_DTDIGIT DTDIGIT,"
+		cQry += "        F1_VALMERC VALOR,"
+		cQry += "        F1_FRETE FRETE,"
+		cQry += "        F1_DESPESA DESPESA,"
+		cQry += "        F1_SEGURO SEGURO,"
+		cQry += "        F1_DESCONT DESCONTO,"
+		cQry += "        (F1_VALMERC + F1_FRETE + F1_DESPESA + F1_SEGURO - F1_DESCONT) TOTAL"
+		cQry += " FROM "+RetSqlName('SF1')
+		cQry += " WHERE F1_DTDIGIT >= '"+DTOS(MV_PAR01)+"'"
+		cQry += "   AND F1_DTDIGIT <= '"+DTOS(MV_PAR02)+"'"
+		cQry += "   AND F1_FORNECE >= '"+AllTrim(MV_PAR03)+"'"
+		cQry += "   AND F1_FORNECE <= '"+AllTrim(MV_PAR04)+"'"
+		cQry += "   AND F1_FILIAL   = '"+xFilial('SF1')+"'"
+		cQry += "   AND D_E_L_E_T_ <> '*'"
+		cQry += " ORDER BY F1_FORNECE,"
+		cQry += "          F1_LOJA,"
+		cQry += "          F1_DTDIGIT,"
+		cQry += "          F1_DOC,"
+		cQry += "          F1_SERIE"
+	EndIf
+	
+	dbUseArea(.T.,'TOPCONN',TCGenQry(,,cQry),'MQRY',.T.)
+	
+	MQRY->(dbEval({||nCount++}))
+	MQRY->(dbGoTop())
+	
+	ProcRegua(nCount+1)
+	
+	While !MQRY->(Eof())
+		IncProc()
+		
+		//adicionando total, titulo e cabeçalho
+		cCampo := AllTrim(MQRY->FORNECE)+'-'+AllTrim(MQRY->LOJA)
+		If _cTitulo <> cCampo
+			If _cTitulo <> ''
+				FornFinal()
+			EndIf
+			_nVolTot := _nMedMes := _nMedSem := _nPeriod := _nPrazo := _nQtd := _nQtdDup := 0
+			
+			aAdd(_aExcel, aClone(aTitulo))
+			_aExcel[Len(_aExcel)][1] += ' ' + cCampo + ' - ' + Posicione('SA2',1,xFilial('SA2')+MQRY->FORNECE+MQRY->LOJA,'A2_NOME')
+			
+			aAdd(_aExcel, aClone(_aBranco))
+			
+			If MV_PAR07 == 1
+				//analitico
+				aAdd(_aExcel, aClone(aCabecA))
+			ElseIf MV_PAR07 == 2
+				//sintético
+				aAdd(_aExcel, aClone(aCabecS))
+			EndIf
+			
+			_cTitulo := cCampo
+		EndIf
+		
+		//adicionando dados
+		aDados := {}
+		aAdd(aDados, MQRY->DOC+'/'+MQRY->SERIE)
+		aAdd(aDados, U_MyDataBR(MQRY->EMISSAO))
+		aAdd(aDados, U_MyDataBR(MQRY->DTDIGIT))
+		If MV_PAR07 == 1
+			//analítico
+			aAdd(aDados, '="'+MQRY->PRODUTO+'"')
+			aAdd(aDados, Posicione('SB1',1,xFilial('SB1')+MQRY->PRODUTO,'B1_DESC'))
+			aAdd(aDados, MQRY->QTD)
+		Endif
+		aAdd(aDados, Transform(MQRY->VALOR,    '@E 999,999,999.99'))
+		aAdd(aDados, Transform(MQRY->FRETE,    '@E 999,999,999.99'))
+		aAdd(aDados, Transform(MQRY->DESPESA,  '@E 999,999,999.99'))
+		aAdd(aDados, Transform(MQRY->SEGURO,   '@E 999,999,999.99'))
+		aAdd(aDados, Transform(MQRY->DESCONTO, '@E 999,999,999.99'))
+		aAdd(aDados, Transform(MQRY->TOTAL,    '@E 999,999,999.99'))
+		
+		//contando notas
+		If MV_PAR07 == 1
+			//analítico
+			cDocAtu := AllTrim(MQRY->DOC)+'/'+AllTrim(MQRY->SERIE)+'#'+cCampo
+			If cDocAnt <> cDocAtu
+				_nQtd += 1
+				
+				//imprime total do documento
+				If _nQtd > 1
+					aAdd(_aExcel, aClone(aTotalA))
+					nPos := Len(_aExcel)
+					_aExcel[nPos][2]  := aDup[1]
+					_aExcel[nPos][4]  := aDup[2]
+					_aExcel[nPos][12] := Transform(nDocTot, '@E 999,999,999.99')
+					aAdd(_aExcel, aClone(_aBranco))
+					_nPrazo += aDup[2]
+					
+					nDocTot := 0
+					lDupA   := .T.
+				EndIf
+				
+				aDup := Duplicata(MQRY->DOC, MQRY->SERIE, MQRY->FORNECE, MQRY->LOJA, MQRY->EMISSAO)
+				cDocAnt := cDocAtu
+			EndIf
+			
+			nDocTot += MQRY->TOTAL
+		ElseIf MV_PAR07 == 2
+			//sintetico
+			_nQtd += 1
+			
+			aDup := Duplicata(MQRY->DOC, MQRY->SERIE, MQRY->FORNECE, MQRY->LOJA, MQRY->EMISSAO)
+			aAdd(aDados, aDup[1])
+			aAdd(aDados, aDup[2])
+			_nPrazo += aDup[2]
+		EndIf
+		
+		//periodicidade
+		If _nQtd > 1
+			_nPeriod += CTOD(U_MyDataBR(MQRY->DTDIGIT)) - dDocAtu
+		EndIf
+		dDocAtu := CTOD(U_MyDataBR(MQRY->DTDIGIT))
+		
+		aAdd(_aExcel, aClone(aDados))
+		
+		_nVolTot += MQRY->TOTAL
+		
+		If MV_PAR09 == 3
+			//primeiros 6 meses
+			cTmp1 := Left(DTOS(MV_PAR01), 6)
+			cTmp2 := Right(cTmp1, 2)
+			If Val(cTmp2) > 7
+				cTmp2 := StrZero(Val(Left(cTmp1, 4)) + 1, 4) + StrZero((Val(cTmp2) + 5) - 12, 2)
+			Else
+				cTmp2 := Left(cTmp1, 4) + StrZero(Val(cTmp2) + 5, 2)
+			EndIf
+			cTmp3 := Left(MQRY->DTDIGIT, 6)
+			If cTmp3 >= cTmp1 .and. cTmp3 <= cTmp2
+				_nMedSem += MQRY->TOTAL
+			EndIf
+		ElseIf MV_PAR09 == 4
+			//últimos 6 meses
+			cTmp1 := Left(DTOS(MV_PAR02), 6)
+			cTmp2 := Right(cTmp1, 2)
+			If Val(cTmp2) < 6
+				cTmp2 := StrZero(Val(Left(cTmp1, 4)) - 1, 4) + StrZero((Val(cTmp2) - 5) + 12, 2)
+			Else
+				cTmp2 := Left(cTmp1, 4) + StrZero(Val(cTmp2) - 5, 2)
+			EndIf
+			cTmp3 := Left(MQRY->DTDIGIT, 6)
+			If cTmp3 >= cTmp2 .and. cTmp3 <= cTmp1
+				_nMedSem += MQRY->TOTAL
+			EndIf
+		EndIf
+		
+		MQRY->(dbSkip())
+	EndDo
+	
+	MQRY->(dbCloseArea())
+	
+	If nCount > 0
+		If _cTitulo <> ''
+			If MV_PAR07 == 1
+				aAdd(_aExcel, aClone(aTotalA))
+				nPos := Len(_aExcel)
+				_aExcel[nPos][2]  := aDup[1]
+				_aExcel[nPos][4]  := aDup[2]
+				_aExcel[nPos][12] := Transform(nDocTot, '@E 999,999,999.99')
+				aAdd(_aExcel, aClone(_aBranco))
+				_nPrazo += aDup[2]
+			EndIf
+			
+			FornFinal()
+		EndIf
+		
+		cRet := U_MyArrCsv(_aExcel, cArq, Nil, _cTitle)
+		If !Empty(cRet)
+			Alert(cRet)
+		EndIf
+		IncProc()
+	Else
+		IncProc()
+		Alert('Não há dados para exibir de acordo com os parâmetros informados.')
+	EndIf
+	
+Return Nil
+
+Static Function FornFinal()
+	Local nMes1, nMes2
+	Local aDados
+	Local nQtdSC1 := Val(MV_PAR10)
+	Local lCabSC1 := .F.
+	Local cFornAnt, cLojaAnt
+	
+	aDados := Separa(_cTitulo, '-')
+	cFornAnt := aDados[1]
+	cLojaAnt := aDados[2]
+	
+	//solicitantes
+	cQry := " SELECT TOP "+cValToChar(nQtdSC1)
+	cQry += "        C1_NUM SOLICIT,"
+	cQry += "        C1_INCUSUA USUARIO,"
+	cQry += "        C1_INCDATA DTSOLIC,"
+	cQry += "        SC71.C7_NUM PEDIDO,"
+	cQry += "        SC71.C7_INCDATA EMISSAO,"
+	cQry += "        D1_DOC DOCUMENTO,"
+	cQry += "        D1_SERIE SERIE,"
+	cQry += "        D1_DTDIGIT DTDIGIT,"
+	cQry += "        (F1_VALMERC + F1_FRETE + F1_DESPESA + F1_SEGURO - F1_DESCONT) VALOR"
+	cQry += " FROM "+RetSqlName('SD1')+" SD1,"
+	cQry += "      "+RetSqlName('SF1')+" SF1,"
+	cQry += "      "+RetSqlName('SC7')+" SC71,"
+	cQry += "      "+RetSqlName('SC7')+" SC72,"
+	cQry += "      "+RetSqlName('SC1')+" SC1"
+	cQry += " WHERE D1_FILIAL      = '"+xFilial('SD1')+"'"
+	cQry += "   AND F1_FILIAL      = '"+xFilial('SF1')+"'"
+	cQry += "   AND SC71.C7_FILIAL = '"+xFilial('SC7')+"'"
+	cQry += "   AND SC72.C7_FILIAL = '"+xFilial('SC7')+"'"
+	cQry += "   AND C1_FILIAL      = '"+xFilial('SC1')+"'"
+	cQry += "   AND SD1.D_E_L_E_T_  <> '*'"
+	cQry += "   AND SF1.D_E_L_E_T_  <> '*'"
+	cQry += "   AND SC71.D_E_L_E_T_ <> '*'"
+	cQry += "   AND SC72.D_E_L_E_T_ <> '*'"
+	cQry += "   AND SC1.D_E_L_E_T_  <> '*'"
+	cQry += "   AND D1_DOC           = F1_DOC"
+	cQry += "   AND D1_SERIE         = F1_SERIE"
+	cQry += "   AND D1_FORNECE       = F1_FORNECE"
+	cQry += "   AND D1_LOJA          = F1_LOJA"
+	cQry += "   AND SC71.C7_NUM      = D1_PEDIDO"
+	cQry += "   AND SC71.C7_TDPCWEB <> ''"
+	cQry += "   AND SC71.C7_TDPCWEB  = SC72.C7_NUM"
+	cQry += "   AND SC72.C7_NUMSC    = C1_NUM"
+	cQry += "   AND D1_DTDIGIT      >= '"+DTOS(MV_PAR01)+"'"
+	cQry += "   AND D1_DTDIGIT      <= '"+DTOS(MV_PAR02)+"'"
+	cQry += "   AND D1_FORNECE       = '"+cFornAnt+"'"
+	cQry += "   AND D1_LOJA          = '"+cLojaAnt+"'"
+	cQry += " GROUP BY C1_NUM,"
+	cQry += "          C1_INCUSUA,"
+	cQry += "          C1_INCDATA,"
+	cQry += "          SC71.C7_NUM,"
+	cQry += "          SC71.C7_INCDATA,"
+	cQry += "          D1_DOC,"
+	cQry += "          D1_SERIE,"
+	cQry += "          D1_DTDIGIT,"
+	cQry += "          (F1_VALMERC + F1_FRETE + F1_DESPESA + F1_SEGURO - F1_DESCONT)"
+	cQry += " ORDER BY C1_INCDATA DESC,"
+	cQry += "          C1_NUM DESC"
+	
+	dbUseArea(.T.,'TOPCONN',TCGenQry(,,cQry),'SSC1',.T.)
+	While !SSC1->(Eof())
+		If !lCabSC1
+			aAdd(_aExcel, aClone(_aBranco))
+			aAdd(_aExcel, aClone(_aCabSC1))
+			lCabSC1 := .T.
+		EndIf
+		
+		aDados := {}
+		aAdd(aDados, '="'+SSC1->SOLICIT+'"')
+		aAdd(aDados, AllTrim(SSC1->USUARIO))
+		aAdd(aDados, U_MyDataBR(SSC1->DTSOLIC))
+		aAdd(aDados, '="'+SSC1->PEDIDO+'"')
+		aAdd(aDados, U_MyDataBR(SSC1->EMISSAO))
+		aAdd(aDados, '="'+SSC1->DOCUMENTO+'/'+SSC1->SERIE+'"')
+		aAdd(aDados, U_MyDataBR(SSC1->DTDIGIT))
+		aAdd(aDados, Transform(SSC1->VALOR, '@E 999,999,999.99'))
+		aAdd(_aExcel, aClone(aDados))
+		
+		SSC1->(dbSkip())
+	EndDo
+	SSC1->(dbCloseArea())
+	
+	aAdd(_aExcel, aClone(_aBranco))
+	
+	aAdd(_aExcel, aClone(_aRdp1))
+	_aExcel[Len(_aExcel)][2] := Transform(_nVolTot, '@E 999,999,999.99')
+	
+	If MV_PAR08 == 1
+		//pesquisa média do mês atual
+		If MV_PAR07 == 1
+			//analitico
+			cQry := " SELECT (D1_TOTAL + D1_VALFRE + D1_DESPESA + D1_SEGURO - D1_VALDESC) TOTAL"
+			cQry += " FROM "+RetSqlName('SD1')
+			cQry += " WHERE D1_DTDIGIT >= '"+DTOS(U_MyDia(1))+"'"
+			cQry += "   AND D1_DTDIGIT <= '"+DTOS(U_MyDia(2))+"'"
+			cQry += "   AND D1_FORNECE  = '"+cFornAnt+"'"
+			cQry += "   AND D1_LOJA     = '"+cLojaAnt+"'"
+			cQry += "   AND D1_COD     >= '"+AllTrim(MV_PAR05)+"'"
+			cQry += "   AND D1_COD     <= '"+AllTrim(MV_PAR06)+"'"
+			cQry += "   AND D1_FILIAL   = '"+xFilial('SD1')+"'"
+			cQry += "   AND D_E_L_E_T_ <> '*'"
+		ElseIf MV_PAR07 == 2
+			//sintetico
+			cQry := " SELECT (F1_VALMERC + F1_FRETE + F1_DESPESA + F1_SEGURO - F1_DESCONT) TOTAL"
+			cQry += " FROM "+RetSqlName('SF1')
+			cQry += " WHERE F1_DTDIGIT >= '"+DTOS(U_MyDia(1))+"'"
+			cQry += "   AND F1_DTDIGIT <= '"+DTOS(U_MyDia(2))+"'"
+			cQry += "   AND F1_FORNECE  = '"+cFornAnt+"'"
+			cQry += "   AND F1_LOJA     = '"+cLojaAnt+"'"
+			cQry += "   AND F1_FILIAL   = '"+xFilial('SF1')+"'"
+			cQry += "   AND D_E_L_E_T_ <> '*'"
+		EndIf
+		
+		dbUseArea(.T.,'TOPCONN',TCGenQry(,,cQry),'MMED',.T.)
+		While !MMED->(Eof())
+			_nMedMes += MMED->TOTAL
+			MMED->(dbSkip())
+		EndDo
+		MMED->(dbCloseArea())
+	ElseIf MV_PAR08 == 2
+		//média mensal do período
+		_nMedMes := _nVolTot / _nDifMes
+	EndIf
+	aAdd(_aExcel, aClone(_aRdp2))
+	_aExcel[Len(_aExcel)][2] := Transform(_nMedMes, '@E 999,999,999.99')
+	
+	If MV_PAR09 == 1 .or. MV_PAR09 == 2
+		If MV_PAR09 == 1
+			//pesquisa média de jan-jun
+			nMes1 := 1
+			nMes2 := 6
+		ElseIf MV_PAR09 == 2
+			//pesquisa média de jul-dez
+			nMes1 := 7
+			nMes2 := 12
+		EndIf
+		
+		If MV_PAR07 == 1
+			//analitico
+			cQry := " SELECT (D1_TOTAL + D1_VALFRE + D1_DESPESA + D1_SEGURO - D1_VALDESC) TOTAL"
+			cQry += " FROM "+RetSqlName('SD1')
+			cQry += " WHERE D1_DTDIGIT >= '"+DTOS(U_MyDia(1,nMes1))+"'"
+			cQry += "   AND D1_DTDIGIT <= '"+DTOS(U_MyDia(2,nMes2))+"'"
+			cQry += "   AND D1_FORNECE  = '"+cFornAnt+"'"
+			cQry += "   AND D1_LOJA     = '"+cLojaAnt+"'"
+			cQry += "   AND D1_COD     >= '"+AllTrim(MV_PAR05)+"'"
+			cQry += "   AND D1_COD     <= '"+AllTrim(MV_PAR06)+"'"
+			cQry += "   AND D1_FILIAL   = '"+xFilial('SD1')+"'"
+			cQry += "   AND D_E_L_E_T_ <> '*'"
+		ElseIf MV_PAR07 == 2
+			//sintetico
+			cQry := " SELECT (F1_VALMERC + F1_FRETE + F1_DESPESA + F1_SEGURO - F1_DESCONT) TOTAL"
+			cQry += " FROM "+RetSqlName('SF1')
+			cQry += " WHERE F1_DTDIGIT >= '"+DTOS(U_MyDia(1,nMes1))+"'"
+			cQry += "   AND F1_DTDIGIT <= '"+DTOS(U_MyDia(2,nMes2))+"'"
+			cQry += "   AND F1_FORNECE  = '"+cFornAnt+"'"
+			cQry += "   AND F1_LOJA     = '"+cLojaAnt+"'"
+			cQry += "   AND F1_FILIAL   = '"+xFilial('SF1')+"'"
+			cQry += "   AND D_E_L_E_T_ <> '*'"
+		EndIf
+		
+		dbUseArea(.T.,'TOPCONN',TCGenQry(,,cQry),'MMED',.T.)
+		While !MMED->(Eof())
+			_nMedSem += MMED->TOTAL
+			MMED->(dbSkip())
+		EndDo
+		MMED->(dbCloseArea())
+		
+		_nMedSem := _nMedSem / 6
+	ElseIf MV_PAR09 == 3 .or. MV_PAR09 == 4
+		//média dos primeiros 6 meses ou dos últimos 6 meses
+		If _nDifMes > 6
+			_nMedSem := _nMedSem / 6
+		Else
+			_nMedSem := _nMedSem / _nDifMes
+		EndIf
+	EndIf
+	aAdd(_aExcel, aClone(_aRdp3))
+	_aExcel[Len(_aExcel)][2] := Transform(_nMedSem, '@E 999,999,999.99')
+	
+	If _nQtd == 1
+		_nPeriod := 0
+	Else
+		_nPeriod := Round(_nPeriod / (_nQtd - 1), 0)
+		_nPrazo  := Round(_nPrazo  / _nQtd, 0)
+	EndIf
+	aAdd(_aExcel, aClone(_aRdp4))
+	_aExcel[Len(_aExcel)][2] := _nPeriod
+	aAdd(_aExcel, aClone(_aRdp5))
+	_aExcel[Len(_aExcel)][2] := _nPrazo
+	
+	aAdd(_aExcel, aClone(_aBranco))
+	aAdd(_aExcel, aClone(_aBranco))
+Return Nil
+
+Static Function Duplicata(cDoc, cSerie, cForn, cLoja, cEmis)
+	Local aRet := {}
+	Local cQry
+	Local nQtdDup, nTmpDup
+	Local dDup
+	
+	cQry := " SELECT E2_VENCREA"
+	cQry += " FROM "+RetSqlName('SE2')
+	cQry += " WHERE E2_FILIAL   = '"+xFilial('SE2')+"'"
+	cQry += "   AND D_E_L_E_T_ <> '*'"
+	cQry += "   AND E2_NUM      = '"+cDoc+"'"
+	cQry += "   AND E2_PREFIXO  = '"+cSerie+"'"
+	cQry += "   AND E2_FORNECE  = '"+cForn+"'"
+	cQry += "   AND E2_LOJA     = '"+cLoja+"'"
+	cQry += " ORDER BY E2_VENCREA"
+	
+	dbUseArea(.T.,'TOPCONN',TCGenQry(,,cQry),'SSE2',.T.)
+	nQtdDup := nTmpDup := 0
+	While !SSE2->(Eof())
+		nQtdDup++
+		
+		If nQtdDup == 1
+			nTmpDup += CTOD(U_MyDataBR(SSE2->E2_VENCREA)) - CTOD(U_MyDataBR(cEmis))
+		Else
+			nTmpDup += CTOD(U_MyDataBR(SSE2->E2_VENCREA)) - dDup
+		EndIf
+		dDup := CTOD(U_MyDataBR(SSE2->E2_VENCREA))
+		
+		SSE2->(dbSkip())
+	EndDo
+	SSE2->(dbCloseArea())
+	
+	nTmpDup := Round(nTmpDup / nQtdDup, 0)
+	
+	aRet := {nQtdDup, nTmpDup}
+Return aRet

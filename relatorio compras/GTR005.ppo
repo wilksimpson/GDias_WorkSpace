@@ -1,0 +1,337 @@
+#line 1 "c:/TOTVS/TDS/Include_P12\rwmake.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 9 "c:\TOTVS\TDS\Workspace\Gdias - Lobo\transdourada\compras\relatorio\\c:/TOTVS/TDS/Workspace/Gdias - Lobo/transdourada/compras/relatorio/GTR005.prw"
+#line 1 "c:/TOTVS/TDS/Include_P12\topconn.ch"
+#line 11 "c:\TOTVS\TDS\Workspace\Gdias - Lobo\transdourada\compras\relatorio\\c:/TOTVS/TDS/Workspace/Gdias - Lobo/transdourada/compras/relatorio/GTR005.prw"
+Function U_GTR005()
+
+
+
+
+
+Local cDesc1         := "Este programa tem como objetivo imprimir relatorio "
+Local cDesc2         := "de acordo com os parametros informados pelo usuario."
+Local cDesc3         := "Relação de Pedido de Compras x Centro de Custo"
+Local cPict          := ""
+Local titulo         := "Relação de Compras x Centro de Custo (Por Ordem de Centro de Custo)"
+Local nLin           := 80
+Local Cabec1         := " Periodo: "
+Local Cabec2         := " Dt.Emissao Nr. PC Produto                                                      Un     Quant.   Pc. Unitario      Vl. Total"
+
+
+
+Local imprime        := .T. 
+Local aOrd           := {}
+Private lEnd         := .F. 
+Private lAbortPrint  := .F. 
+Private CbTxt        := ""
+Private limite       := 132
+Private tamanho      := "M"
+Private nomeprog     := "GTR005"
+Private nTipo        := 18
+Private aReturn      := { "Zebrado", 1, "Administracao", 2, 2, 1, "", 1}
+Private nLastKey     := 0
+Private cPerg        := "GTR005"
+Private cbtxt        := Space(10)
+Private cbcont       := 00
+Private CONTFL       := 01
+Private m_pag        := 01
+Private wnrel        := "GTR005"
+Private cString      := "SC7"
+
+criaperg(cPerg)
+pergunte(cPerg, .T. )
+
+
+
+
+
+wnrel := SetPrint(cString,NomeProg,cPerg,@titulo,cDesc1,cDesc2,cDesc3, .T. ,aOrd, .T. ,Tamanho,, .T. )
+
+If nLastKey == 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Return
+Endif
+
+nTipo := If(aReturn[4]==1,15,18)
+
+
+
+
+
+RptStatus({|| RunReport(Cabec1,Cabec2,Titulo,nLin) },Titulo)
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RunReport(Cabec1,Cabec2,Titulo,nLin)
+
+Local nOrdem
+Local _cDtInic := DTOC(mv_par01)
+Local _cDtFim  := DTOC(mv_par02)
+Local _nVlTot  := 0
+Local _nVlTCC  := 0
+Local _cCodCC  := ""
+Local _lCC     := .T. 
+Local _lImpCC  := .T. 
+Local _lImpDE  := .T. 
+Local _cCCusto :=  ""
+
+Cabec1 := Cabec1 + _cDtInic + " a " + _cDtFim
+
+If Select("TBTMP") > 0
+	TBTMP->(dbCloseArea())
+EndIf
+
+_cQry := " SELECT SD1.* FROM "+RetSqlName("SD1")+" SD1 "
+_cQry += " WHERE SD1.D_E_L_E_T_ <> '*' "
+_cQry += " AND SD1.D1_FILIAL = '"+xfilial("SD1")+"'"
+_cQry += " AND SD1.D1_EMISSAO  >= '"+DTOS(mv_par01)+"' "
+_cQry += " AND SD1.D1_EMISSAO  <= '"+DTOS(mv_par02)+"' "
+_cQry += " ORDER BY SD1.D1_CC, SD1.D1_EMISSAO"
+
+
+
+
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQry), "TBTMP" , .F. , .T. )
+
+_aStruSD1:= SD1->(dbStruct())
+
+For _nX := 1 To Len(_aStruSD1)
+	If _aStruSD1[_nX,2] $ "DN"
+		TcSetField("TBTMP",_aStruSD1[_nX,1],_aStruSD1[_nX,2],_aStruSD1[_nX,3],_aStruSD1[_nX,4])
+	EndIf
+next
+
+_cArqTmp := CriaTrab(NIL, .F. )
+_cArqDbf := _cArqTmp+".DBF"
+_cArqInd := _cArqTmp+".CDX"
+
+__dbCopy(_cArqTmp , { },,,,,.F., "DBFCDXADS" )
+
+dbselectarea("TBTMP")
+dbCloseArea()
+
+dbUseArea( .T. ,"DBFCDXADS",_cArqTMP,"TBTMP", .T. )
+
+
+dbgotop()
+
+_cCodCC     := TBTMP->D1_CC
+_dDtEmissao := TBTMP->D1_EMISSAO
+
+if reccount() > 0
+
+	SetRegua(RecCount())
+	dbGoTop()
+
+	While !EOF()
+
+
+
+
+
+		procregua()
+
+		If lAbortPrint
+			PrintOut(nLin,00,"*** CANCELADO PELO OPERADOR ***",)
+			Exit
+		Endif
+
+
+
+
+
+		If nLin > 55
+			Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+			nLin := 8
+		Endif
+
+		IF _lCC = .T. 
+
+			dbselectarea("CTT")
+			dbsetorder(1)
+			dbgotop()
+
+			_cCCusto :=  ""
+
+			if dbseek(xfilial("CTT")+TBTMP->D1_CC, .f. )
+				_cCCusto := CTT_DESC01
+				_lCC = .F. 
+			Endif
+
+		ENDIF
+
+
+		dbselectarea("SB1")
+		dbsetorder(1)
+		dbgotop()
+
+		_cProduto :=  ""
+
+		if dbseek(xfilial("SB1")+TBTMP->D1_COD, .f. )
+			_cProduto := B1_DESC
+		Endif
+
+		dbselectarea("TBTMP")
+
+		nLin := nLin + 1
+
+
+
+
+
+
+
+
+		IF _lImpCC = .T. 
+		  PrintOut(nLin,0,"Centro de Custo: "+ALLTRIM(_cCodCC)+" - "+_cCCusto,)
+		  _lImpCC := .F. 
+		  nLin := nLin + 1
+		ENDIF
+
+		IF _lImpDE = .T. 
+		  PrintOut(nLin,001,D1_EMISSAO,)
+		  _lImpDE := .F. 
+		ENDIF
+		PrintOut(nLin,012,D1_PEDIDO,)
+		PrintOut(nLin,019,_cProduto,)
+		PrintOut(nLin,080,D1_UM,)
+		PrintOut(nLin,083,D1_QUANT,"@E 999,999.99")
+		PrintOut(nLin,094,D1_VUNIT,"@E 999,999,999.99")
+		PrintOut(nLin,109,D1_TOTAL,"@E 999,999,999.99")
+
+		_nVlTCC  := _nVlTCC + D1_TOTAL
+		_nVlTot  := _nVlTot + D1_TOTAL
+
+		dbselectarea("TBTMP")
+		dbSkip()
+
+		IF TBTMP->D1_CC <> _cCodCC
+          PrintOut(nLin+1,091,"__________________________________",)
+	      PrintOut(nLin+2,092,"TOTAL DO C.CUSTO:",)
+	      PrintOut(nLin+2,109,_nVlTCC,"@E 999,999,999.99")
+		  nLin := nLin + 2
+		  _cCodCC := TBTMP->D1_CC
+		  _lCC    := .T. 
+		  _lImpCC := .T. 
+		  _lImpDE := .T. 
+		  _nVlTCC := 0
+		ENDIF
+
+		IF TBTMP->D1_EMISSAO <> _dDtEmissao
+		  _dDtEmissao := TBTMP->D1_EMISSAO
+		  _lImpDE := .T. 
+		ENDIF
+
+
+	EndDo
+
+	PrintOut(nLin+1,091,"__________________________________",)
+	PrintOut(nLin+2,092,"TOTAL DO PERIODO:",)
+	PrintOut(nLin+2,109,_nVlTot,"@E 999,999,999.99")
+
+Else
+
+	alert("!! Nao existe dados para imprimir !!")
+
+Endif
+
+If select("TBTMP") > 0
+	TBTMP->(dbCloseArea())
+	FErase(_cArqDbf )
+	FErase(_cArqInd )
+Endif
+
+
+
+
+
+
+Set( 20, "SCREEN" )
+
+
+
+
+
+setpgeject( .F. )
+
+If aReturn[5]==1
+	dbCommitAll()
+	Set( 24, "" )
+	OurSpool(wnrel)
+Endif
+
+MS_FLUSH()
+
+Return
+
+
+
+
+
+Static Function CriaPerg(cPerg)
+
+
+aSvAlias:={Alias(),IndexOrd(),Recno()}
+i:=j:=0
+
+if alltrim(upper(cVersao)) == "P10"
+	cPerg := PADR(cPerg,10)
+Else
+	cPerg := PADR(cPerg,6)
+Endif
+
+aRegistros:={}
+
+
+AADD(aRegistros,{cPerg,"01","Da Data            ?",".",".","mv_ch1","D",08,0,0,"G","","mv_par01","              ","","","","",""                 ,"","","","",""       ,"","","","",""           ,"","","","",""       ,"","","","  ","","","","",""})
+AADD(aRegistros,{cPerg,"02","Ate a Data         ?",".",".","mv_ch2","D",08,0,0,"G","","mv_par02","              ","","","","",""                 ,"","","","",""       ,"","","","",""           ,"","","","",""       ,"","","","  ","","","","",""})
+
+
+
+
+
+
+
+dbSelectArea("SX1")
+dbsetorder(1)
+
+For i := 1 to Len(aRegistros)
+	dbgotop()
+	dbSeek(aRegistros[i,1]+aRegistros[i,2])
+	if eof()
+		if RecLock("SX1", .T. )
+			For j:=1 to 42
+				FieldPut(j,aRegistros[i,j])
+			Next
+			MsUnlock()
+		Endif
+	Endif
+next
+
+dbSelectArea(aSvAlias[1])
+dbSetOrder(aSvAlias[2])
+dbGoto(aSvAlias[3])
+
+Return(nil)

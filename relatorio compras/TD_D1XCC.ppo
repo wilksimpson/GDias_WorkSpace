@@ -1,0 +1,320 @@
+#line 1 "c:/TOTVS/TDS/Include_P12\protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\Dialog.ch"
+#line 28 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\Font.ch"
+#line 29 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\PTMenu.ch"
+#line 31 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\Print.ch"
+#line 33 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\Colors.ch"
+#line 35 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\Folder.ch"
+#line 37 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\msobject.ch"
+#line 38 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\VKey.ch"
+#line 42 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\WinApi.ch"
+#line 44 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\FWCommand.ch"
+#line 47 "protheus.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\FWCSS.CH"
+#line 50 "protheus.ch"
+#line 2 "c:\TOTVS\TDS\Workspace\Gdias - Lobo\transdourada\compras\relatorio\\c:/TOTVS/TDS/Workspace/Gdias - Lobo/transdourada/compras/relatorio/TD_D1XCC.prw"
+#line 1 "c:/TOTVS/TDS/Include_P12\rwmake.ch"
+#line 1 "c:/TOTVS/TDS/Include_P12\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 3 "c:\TOTVS\TDS\Workspace\Gdias - Lobo\transdourada\compras\relatorio\\c:/TOTVS/TDS/Workspace/Gdias - Lobo/transdourada/compras/relatorio/TD_D1XCC.prw"
+
+Function U_TD_D1XCC()
+
+
+
+
+
+
+	Local cPerg := "D1XCC"
+	Local nTamGrp := Len(SX1->X1_GRUPO)
+	Local aHelpPor := {}, aHelpEng := {}, aHelpSpa := {}
+	Local cNome
+	Private _cTitle := "Relatório de Compras por Centro de Custo"
+
+	aHelpPor := {}
+	aAdd(aHelpPor, "Informe a data de digitacao do")
+	aAdd(aHelpPor, "documento.")
+	cNome := "Data de"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "01", cNome, cNome, cNome, "MV_CH1", "D", 8, 0, 0, "G", "", "", "", "", "MV_PAR01", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	cNome := "Data ate"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "02", cNome, cNome, cNome, "MV_CH2", "D", 8, 0, 0, "G", "", "", "", "", "MV_PAR02", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	aHelpPor := {}
+	aAdd(aHelpPor, "Informe a ordem de impressao.")
+	cNome := "Ordem"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "03", cNome, cNome, cNome, "MV_CH3", "C", 1, 0, 0, "C", "", "", "", "", "MV_PAR03", "Centro de Custo", "Centro de Custo", "Centro de Custo", "1", "Data Digitacao", "Data Digitacao", "Data Digitacao", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	aHelpPor := {}
+	aAdd(aHelpPor, "Informe se deseja imprimir os titulos e")
+	aAdd(aHelpPor, "totais.")
+	cNome := "Imprimir titulos e totais"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "04", cNome, cNome, cNome, "MV_CH4", "C", 1, 0, 0, "C", "", "", "", "", "MV_PAR04", "Sim", "Sim", "Sim", "1", "Nao", "Nao", "Nao", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	aHelpPor := {}
+	aAdd(aHelpPor, "Informe o centro de custo que deseja")
+	aAdd(aHelpPor, "imprimir.")
+	cNome := "Do Centro Custo"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "05", cNome, cNome, cNome, "MV_CH5", "C", 9, 0, 0, "G", "", "CTT", "", "", "MV_PAR05", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	cNome := "Ate Centro Custo"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "06", cNome, cNome, cNome, "MV_CH6", "C", 9, 0, 0, "G", "", "CTT", "", "", "MV_PAR06", "", "", "", "ZZZZZZZZZ", "", "", "", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	aHelpPor := {}
+	aAdd(aHelpPor, "Informe a natureza que deseja imprimir.")
+	cNome := "Da Natureza"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "07", cNome, cNome, cNome, "MV_CH7", "C", 10, 0, 0, "G", "", "SED", "", "", "MV_PAR07", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	cNome := "Ate Natureza"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "08", cNome, cNome, cNome, "MV_CH8", "C", 10, 0, 0, "G", "", "SED", "", "", "MV_PAR08", "", "", "", "ZZZZZZZZZZ", "", "", "", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	cNome := "Arquivo"
+
+
+
+
+
+
+
+	PutSx1(PadR(cPerg,nTamGrp), "09", cNome, cNome, cNome, "MV_CH9", "C", 50, 0, 0, "G", "", "", "", "", "MV_PAR09", "", "", "", "C:\SPOOL\D1xCC.csv", "", "", "", "", "", "", "", "", "", "", "", "", aHelpPor, aHelpEng, aHelpSpa)
+
+	If !Pergunte(cPerg, .T. , _cTitle)
+		Return Nil
+	end
+
+	If MV_PAR01 == Nil .or.  MV_PAR01 == CTOD("") .or.  MV_PAR02 == Nil .or.  MV_PAR02 == CTOD("")
+		Alert("Informe as datas para geração do relatório.")
+		Return Nil
+	ElseIf MV_PAR02 < MV_PAR01
+		Alert("A data final deve ser maior que a data inicial.")
+		Return Nil
+	Elseif AllTrim(MV_PAR09) == ""
+		MV_PAR09 := "C:\SPOOL\D1xCC.csv"
+	EndIf
+
+	Processa({|| TDD1XCC() }, _cTitle, "Aguarde..", .F. )
+Return Nil
+
+Static Function TDD1XCC()
+	Local cQry, cCampo, cTitulo := "", cRet, cArq := AllTrim(MV_PAR09)
+	Local aExcel  := {}
+	Local aInfo1  := {_cTitle}
+	Local aInfo2  := {"Período: " + U_MyDataBR(DTOS(MV_PAR01)) + " até " + U_MyDataBR(DTOS(MV_PAR02))}
+	Local aInfo3  := {"Emitido em: " + U_MyDataBR(DTOS(Date()))}
+	Local aTitulo := {Iif(MV_PAR03==1,"Centro de Custo:","Data Digitação:")}
+	Local aBranco := {"","","","","","","","","","","","","",""}
+
+
+	Local aCabec  := {"Natureza","Descrição","Centro de Custo","Data Digitação","Documento","Pedido", "Produto","Unidade","Quantidade","Preço Unitário","Valor Total", "Descrição","Observação","Observação Solicitação"}
+	Local aTotal  := {"","","","","","","","","","Total Geral","","","",""}
+	Local aDados  := {}
+	Local lCabec  := .F. 
+	Local nTotal, nTotalP := 0, nCount := 0, nHdl
+
+	nHdl := fCreate(cArq)
+	If nHdl == -1
+		Alert("Impossível escrever no arquivo: " + cArq + chr(13) + chr(10) + "Se o mesmo estiver aberto, por favor finalize.")
+		Return Nil
+	EndIf
+	fClose(nHdl)
+
+	aAdd(aExcel, aClone(aInfo1))
+	aAdd(aExcel, aClone(aInfo2))
+	aAdd(aExcel, aClone(aInfo3))
+	aAdd(aExcel, aClone(aBranco))
+
+	cQry := " SELECT DISTINCT"
+	cQry += "        E2_NATUREZ,"
+	cQry += "        SD1.*"
+	cQry += " FROM "+RetSqlName("SD1")+" SD1,"
+	cQry += "      "+RetSqlName("SE2")+" SE2"
+	cQry += " WHERE SD1.D_E_L_E_T_ <> '*' "
+	cQry += "   AND SE2.D_E_L_E_T_ <> '*' "
+	cQry += "   AND D1_FILIAL   = '"+xFilial("SD1")+"'"
+	cQry += "   AND D1_DTDIGIT >= '"+DTOS(MV_PAR01)+"'"
+	cQry += "   AND D1_DTDIGIT <= '"+DTOS(MV_PAR02)+"'"
+	cQry += "   AND D1_CC      >= '"+AllTrim(MV_PAR05)+"'"
+	cQry += "   AND D1_CC      <= '"+AllTrim(MV_PAR06)+"'"
+	cQry += "   AND E2_NATUREZ >= '"+AllTrim(MV_PAR07)+"'"
+	cQry += "   AND E2_NATUREZ <= '"+AllTrim(MV_PAR08)+"'"
+	cQry += "   AND E2_FILIAL   = '"+xFilial("SE2")+"'"
+	cQry += "   AND E2_NUM      = D1_DOC"
+	cQry += "   AND E2_PREFIXO  = D1_SERIE"
+	cQry += "   AND E2_FORNECE  = D1_FORNECE"
+	cQry += "   AND E2_LOJA     = D1_LOJA"
+	If MV_PAR03 == 1
+		cQry += " ORDER BY D1_CC,"
+		cQry += "          D1_DTDIGIT,"
+	ElseIf MV_PAR03 == 2
+		cQry += " ORDER BY D1_DTDIGIT,"
+		cQry += "          D1_CC,"
+	EndIf
+	cQry += "              E2_NATUREZ,"
+	cQry += "              D1_DOC,"
+	cQry += "              D1_COD"
+
+	dbUseArea( .T. ,"TOPCONN",TCGenQry(,,cQry),"SSD1", .T. )
+
+	SSD1->(dbEval({||nCount++}))
+	SSD1->(dbGoTop())
+
+	ProcRegua(nCount+1)
+
+	While !SSD1->(Eof())
+		IncProc()
+
+
+		cCampo := Iif(MV_PAR03==1,SSD1->D1_CC,SSD1->D1_DTDIGIT)
+		If cTitulo <> cCampo
+			If MV_PAR04 == 1
+				If cTitulo <> ""
+					aAdd(aExcel, aClone(aTotal))
+					aExcel[Len(aExcel)][11] := nTotal
+
+					aAdd(aExcel, aClone(aBranco))
+				EndIf
+				nTotal := 0
+
+				aAdd(aExcel, aClone(aTitulo))
+				If MV_PAR03 == 1
+					aExcel[Len(aExcel)][1] += " " + cCampo + " - Descrição: " + Posicione("CTT",1,xFilial("CTT")+cCampo,"CTT_DESC01")
+				Else
+					aExcel[Len(aExcel)][1] += " " + U_MyDataBR(cCampo)
+				EndIf
+
+				aAdd(aExcel, aClone(aBranco))
+
+				aAdd(aExcel, aClone(aCabec))
+			Else
+				If !lCabec
+					aAdd(aExcel, aClone(aCabec))
+					lCabec := .T. 
+				EndIf
+			EndIf
+			cTitulo := cCampo
+		EndIf
+
+
+		aDados := {}
+		aAdd(aDados, SSD1->E2_NATUREZ)
+		aAdd(aDados, AllTrim(Posicione("SED",1,xFilial("SED")+SSD1->E2_NATUREZ,"ED_DESCRIC")))
+		aAdd(aDados, SSD1->D1_CC)
+		aAdd(aDados, U_MyDataBR(SSD1->D1_DTDIGIT))
+		aAdd(aDados, StrZero(Val(SSD1->D1_DOC), 6))
+		aAdd(aDados, StrZero(Val(SSD1->D1_PEDIDO), 6))
+		aAdd(aDados, StrZero(Val(SSD1->D1_COD), 6))
+		aAdd(aDados, SSD1->D1_UM)
+		aAdd(aDados, SSD1->D1_QUANT)
+		aAdd(aDados, SSD1->D1_VUNIT)
+		aAdd(aDados, SSD1->D1_TOTAL)
+		aAdd(aDados, AllTrim(Posicione("SB1",1,xFilial("SB1")+SSD1->D1_COD,"B1_DESC")))
+
+
+		aAdd(aDados, AllTrim(Posicione("SC7",4,xFilial("SC7")+ PadR(SSD1->D1_COD, 15) + StrZero(Val(SSD1->D1_PEDIDO), 6) + StrZero(Val(SSD1->D1_ITEMPC), 4),"C7_OBS")))
+		aAdd(aDados, AllTrim(SC7->C7_OBSWF))
+		aAdd(aExcel, aClone(aDados))
+
+		If MV_PAR04 == 1
+			nTotal  += SSD1->D1_TOTAL
+			nTotalP += SSD1->D1_TOTAL
+		EndIf
+
+		SSD1->(dbSkip())
+	EndDo
+
+	SSD1->(dbCloseArea())
+
+	If nCount > 0
+		If MV_PAR04 == 1
+			If cTitulo <> ""
+				aAdd(aExcel, aClone(aTotal))
+				aExcel[Len(aExcel)][11] := nTotal
+
+				aAdd(aExcel, aClone(aBranco))
+			EndIf
+			nTotal := 0
+		EndIf
+
+
+		If MV_PAR04 == 1
+			aAdd(aExcel, aClone(aBranco))
+			aExcel[Len(aExcel)][10] := "Total Período"
+			aExcel[Len(aExcel)][11] := nTotalP
+		EndIf
+
+		cRet := U_MyArrCsv(aExcel, cArq)
+		If !Empty(cRet)
+			Alert(cRet)
+		EndIf
+		IncProc()
+	Else
+		IncProc()
+		Alert("Não há dados para exibir de acordo com os parâmetros informados.")
+	EndIf
+
+Return Nil
